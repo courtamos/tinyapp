@@ -2,6 +2,12 @@ const express = require("express");
 const app = express();
 const PORT = 8080;
 
+
+// ----- MORGAN MIDDLEWARE -----
+const morgan = require('morgan'); // morgan middleware (gives transparency to incoming & outcoming infomation to the server)
+app.use(morgan('dev'));
+
+
 app.set("view engine", "ejs");  // use EJS as the templating engine
 app.use(express.urlencoded({extended: true})); // used instead of body-parser(deprecated)
 
