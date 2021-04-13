@@ -95,6 +95,13 @@ app.post("/urls/:shortURL", (req, res) => { // edit/update a shortURL's longURL
   res.redirect("/urls");
 });
 
+app.post("/login", (req, res) => { // login route to set cookie named username
+  const username = req.body["username"];
+  res.cookie('username', username);
+
+  res.redirect('/urls');
+});
+
 
 // ----- APP.LISTEN -----
 app.listen(PORT, () => {
