@@ -23,7 +23,7 @@ const generateRandomString = function() {  // generate random alphanumeric chara
 };
 
 // ----- APP.GET -----
-app.get("/", (req, res) => {
+app.get("/", (req, res) => {  // homepage route
   res.send("Hello!");
 });
 
@@ -44,7 +44,7 @@ app.get("/urls", (req, res) => { // passing the URL data to template (urls_index
 });
 
 
-app.get("/urls/new", (req, res) => { // rending the template in the browers (urls_new.ejs)
+app.get("/urls/new", (req, res) => { // rendering the template in the browers (urls_new.ejs)
   res.render("urls_new");
 });
 
@@ -63,13 +63,22 @@ app.get("/u/:shortURL", (req, res) => { // redirecting shortURL to correct longU
 
 // ----- APP.POST -----
 app.post("/urls", (req, res) => { // creating/saving a new URL and storing it to urlDatabase object
-  console.log(req.body);
-  res.send("Ok");
+  // console.log("req.body: ", req.body);
 
   const shortURL = generateRandomString();
-  urlDatabase[shortURL] = { longURL: req.body["longUrl"] };
+  urlDatabase[shortURL] = req.body["longURL"];
 
   res.redirect(`/urls/${shortURL}`);
+});
+
+
+app.post("/urls/:shortURL/delete", (req, res) => { // deleting/removing a URL
+  // console.log('in delete route');
+
+  const shortURLDelete = req.params.shortURL;
+  delete urlDatabase[shortURLDelete];
+
+  res.redirect("/urls");
 });
 
 
