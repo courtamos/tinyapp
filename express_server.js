@@ -1,11 +1,17 @@
+// ----- EXPRESS SETUP -----
 const express = require("express");
 const app = express();
 const PORT = 8080;
 
 
-// ----- MORGAN MIDDLEWARE -----
+// ----- MORGAN MIDDLEWARE SETUP -----
 const morgan = require('morgan'); // morgan middleware (gives transparency to incoming & outcoming infomation to the server)
 app.use(morgan('dev'));
+
+
+// ----- COOKIE-PARSER SETUP -----
+const cookieParser = require('cookie-parser');
+app.use(cookieParser());
 
 
 app.set("view engine", "ejs");  // use EJS as the templating engine
