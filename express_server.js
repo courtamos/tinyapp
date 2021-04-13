@@ -3,6 +3,11 @@ const app = express();
 const PORT = 8080; // default port 8080
 
 app.set("view engine", "ejs");
+app.use(express.urlencoded({extended: true})); // used instead of body-parser(deprecated)
+
+const generateRandomString = function() {
+  return Math.random().toString(20).substr(2, 6);
+};
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
