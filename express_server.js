@@ -145,9 +145,8 @@ app.post("/register", (req, res) => { // register route
   };
 
   users[id] = newUser;
-  console.log(users[id]);
-  console.log(users);
 
+  res.cookie('user_id', id);
   res.redirect("/urls");
 });
 
