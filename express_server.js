@@ -155,7 +155,7 @@ app.post("/login", (req, res) => { // login route to set cookie named username
 
 
 app.post("/logout", (req, res) => { // logout route that clears cookie
-  res.clearCookie('username');
+  res.clearCookie('user_id');
 
   res.redirect('/urls');
 });
