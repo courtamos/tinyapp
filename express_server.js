@@ -18,9 +18,22 @@ app.set("view engine", "ejs");  // use EJS as the templating engine
 app.use(express.urlencoded({extended: true})); // used instead of body-parser(deprecated)
 
 
-const urlDatabase = { // database to store key:value pairs of URLs
+const urlDatabase = { // 'database' to store key:value pairs of URLs
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
+};
+
+const users = { // 'database' to store key:value pairs for users
+  "userRandomID": {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur"
+  },
+  "user2RandomID": {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk"
+  }
 };
 
 
@@ -104,6 +117,7 @@ app.post("/urls/:shortURL", (req, res) => { // edit/update a shortURL's longURL
   res.redirect("/urls");
 });
 
+
 app.post("/login", (req, res) => { // login route to set cookie named username
   const username = req.body["username"];
   res.cookie('username', username);
@@ -111,10 +125,30 @@ app.post("/login", (req, res) => { // login route to set cookie named username
   res.redirect('/urls');
 });
 
+
 app.post("/logout", (req, res) => { // logout route that clears cookie
   res.clearCookie('username');
 
   res.redirect('/urls');
+});
+
+
+app.post("/register", (req, res) => { // register route
+  const id = generateRandomString();
+  const email = req.body.email;
+  const password = req.body.password;
+
+  const newUser = {
+    id,
+    email,
+    password
+  };
+
+  users[id] = newUser;
+  console.log(users[id]);
+  console.log(users);
+
+  res.redirect("/urls");
 });
 
 
