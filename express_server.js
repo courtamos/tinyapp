@@ -58,20 +58,21 @@ app.get("/hello", (req, res) => {
 
 
 app.get("/urls", (req, res) => { // passing the URL data to template (urls_index.ejs)
-  const templateVars = { urls: urlDatabase, username: req.cookies["username"] };
+  
+  const templateVars = { urls: urlDatabase, user: users[req.cookies.user_id] };
   res.render("urls_index", templateVars);
 });
 
 
 app.get("/urls/new", (req, res) => { // rendering the template in the browers (urls_new.ejs)
-  const templateVars = { username: req.cookies["username"] };
+  const templateVars = { user: users[req.cookies.user_id] };
   
   res.render("urls_new", templateVars);
 });
 
 
 app.get("/urls/:shortURL", (req, res) => { // display a single URL and its shortURL
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], username: req.cookies["username"] };
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], user: users[req.cookies.user_id] };
   res.render("urls_show", templateVars);
 });
 
@@ -83,7 +84,7 @@ app.get("/u/:shortURL", (req, res) => { // redirecting shortURL to correct longU
 
 
 app.get("/register", (req, res) => { // rending the register template in brower
-  const templateVars = { username: req.cookies["username"] };
+  const templateVars = { user: users[req.cookies.user_id] };
 
   res.render("urls_register", templateVars);
 });
