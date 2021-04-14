@@ -136,9 +136,20 @@ app.post("/urls/:shortURL", (req, res) => { // edit/update a shortURL's longURL
 
 
 app.post("/login", (req, res) => { // login route to set cookie named username
-  const username = req.body["username"];
-  res.cookie('username', username);
+  const user = userEmailLookup(users, req.body.email);
+  console.log(user);
 
+  if (!user) {
+    res.status(403).send('Email not found. Please register!');
+    res.end();
+  }
+
+  if (user.password !== req.body.password) {
+    res.status(403).send('Password is incorrect. Try again!');
+    res.end();
+  }
+
+  res.cookie('user_id', user.id);
   res.redirect('/urls');
 });
 
