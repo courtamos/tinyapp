@@ -19,8 +19,8 @@ app.use(express.urlencoded({extended: true})); // used instead of body-parser(de
 
 
 const urlDatabase = { // 'database' to store key:value pairs of URLs
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2": {longURL: "http://www.lighthouselabs.ca", userID: "userRandomID" },
+  "9sm5xK": {longURL: "http://www.google.com", userID: "user2RandomID" }
 };
 
 const users = { // 'database' to store key:value pairs for users
@@ -61,13 +61,14 @@ app.get("/urls.json", (req, res) => {
 });
 
 
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
-
-
 app.get("/urls", (req, res) => { // passing the URL data to template (urls_index.ejs)
   const templateVars = { urls: urlDatabase, user: users[req.cookies.user_id] };
+  const user = users[req.cookies.user_id];
+
+  if (!user) {
+    res.redirect('/login');
+    res.exit();
+  }
 
   res.render("urls_index", templateVars);
 });
@@ -87,13 +88,20 @@ app.get("/urls/new", (req, res) => { // rendering the template in the browers (u
 
 
 app.get("/urls/:shortURL", (req, res) => { // display a single URL and its shortURL
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], user: users[req.cookies.user_id] };
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL, user: users[req.cookies.user_id] };
+  const user = users[req.cookies.user_id];
+
+  if (!user) {
+    res.redirect('/login');
+    res.exit();
+  }
+  
   res.render("urls_show", templateVars);
 });
 
 
 app.get("/u/:shortURL", (req, res) => { // redirecting shortURL to correct longURL
-  const longURL = urlDatabase[req.params.shortURL];
+  const longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
 });
 
