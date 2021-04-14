@@ -41,7 +41,7 @@ const generateRandomString = function() {  // generate random alphanumeric chara
   return Math.random().toString(20).substr(2, 6);
 };
 
-const findUserByEmail = function(database, email) { // helper function to lookup user by email and return the entire user object if found or null if not
+const userEmailLookup = function(database, email) { // helper function to lookup user by email and return the entire user object if found or null if not
   for (let key in database) {
     if (database[key].email === email) {
       return database[key];
@@ -159,7 +159,7 @@ app.post("/register", (req, res) => { // register route
     res.end();
   }
 
-  const user = findUserByEmail(users, email);
+  const user = userEmailLookup(users, email);
 
   if (user) {
     res.status(400).send('Email is already registered');
