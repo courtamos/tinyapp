@@ -67,14 +67,20 @@ app.get("/hello", (req, res) => {
 
 
 app.get("/urls", (req, res) => { // passing the URL data to template (urls_index.ejs)
-  
   const templateVars = { urls: urlDatabase, user: users[req.cookies.user_id] };
+
   res.render("urls_index", templateVars);
 });
 
 
 app.get("/urls/new", (req, res) => { // rendering the template in the browers (urls_new.ejs)
   const templateVars = { user: users[req.cookies.user_id] };
+  const user = users[req.cookies.user_id];
+
+  if (!user) {
+    res.redirect('/login');
+    res.exit();
+  }
   
   res.render("urls_new", templateVars);
 });
@@ -108,8 +114,6 @@ app.get("/login", (req, res) => { // rendering the login template in browser
 
 // ----- APP.POST -----
 app.post("/urls", (req, res) => { // creating/saving a new URL and storing it to urlDatabase object
-  // console.log("req.body: ", req.body);
-
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = req.body["longURL"];
 
@@ -118,8 +122,6 @@ app.post("/urls", (req, res) => { // creating/saving a new URL and storing it to
 
 
 app.post("/urls/:shortURL/delete", (req, res) => { // deleting/removing a URL
-  // console.log('in delete route');
-
   const shortURLDelete = req.params.shortURL;
   delete urlDatabase[shortURLDelete];
 
