@@ -99,6 +99,13 @@ app.get("/register", (req, res) => { // rending the register template in brower
 });
 
 
+app.get("/login", (req, res) => { // rendering the login template in browser
+  const templateVars = { user: users[req.cookies.user_id] };
+
+  res.render("urls_login", templateVars);
+});
+
+
 // ----- APP.POST -----
 app.post("/urls", (req, res) => { // creating/saving a new URL and storing it to urlDatabase object
   // console.log("req.body: ", req.body);
