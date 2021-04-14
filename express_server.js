@@ -41,6 +41,15 @@ const generateRandomString = function() {  // generate random alphanumeric chara
   return Math.random().toString(20).substr(2, 6);
 };
 
+const findUserByEmail = function(database, email) { // helper function to lookup user by email and return the entire user object if found or null if not
+  for (let key in database) {
+    if (database[key].email === email) {
+      return database[key];
+    }
+  }
+  return null;
+};
+
 // ----- APP.GET -----
 app.get("/", (req, res) => {  // homepage route
   res.send("Hello!");
@@ -144,6 +153,18 @@ app.post("/register", (req, res) => { // register route
     email,
     password
   };
+
+  if (!email || !password) {
+    res.status(400).send('Email and Password fields can NOT be empty');
+    res.end();
+  }
+
+  const user = findUserByEmail(users, email);
+
+  if (user) {
+    res.status(400).send('Email is already registered');
+    res.end();
+  }
 
   users[id] = newUser;
 
