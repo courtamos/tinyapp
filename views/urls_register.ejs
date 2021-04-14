@@ -16,16 +16,24 @@
 
   <%- include('partials/_header') %>
 
-    <form class="form-inline" action="/register" method="POST">
-      <div class="mb-3">
-        <label for="formGroupExampleInput" class="form-label">Email Address</label>
-        <input class="form-control" type="email" name="email" placeholder="Email Address">
+    <div class="card text-center">
+      <div class="card-header"></div>
+      <div class="card-body">
+        <h5 class="card-title">Register for TinyApp</h5>
+        <form class="form-inline" action="/register" method="POST">
+          <div class="mb-3">
+            <label for="formGroupExampleInput" class="form-label">Email Address</label>
+            <input class="form-control" type="email" name="email" placeholder="Email Address">
+          </div>
+          <div class="mb-3">
+            <label for="formGroupExampleInput2" class="form-label">Password</label>
+            <input class="form-control" type="password" name="password" placeholder="Password">
+          </div>
+        </form>
       </div>
-      <div class="mb-3">
-        <label for="formGroupExampleInput2" class="form-label">Password</label>
-        <input class="form-control" type="password" name="password" placeholder="Password">
+      <div class="card-footer text-muted">
       </div>
-    </form>
+    </div>
 
     <!-- Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"

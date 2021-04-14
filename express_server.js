@@ -69,6 +69,13 @@ app.get("/u/:shortURL", (req, res) => { // redirecting shortURL to correct longU
 });
 
 
+app.get("/register", (req, res) => { // rending the register template in brower
+  const templateVars = { username: req.cookies["username"] };
+
+  res.render("urls_register", templateVars);
+});
+
+
 // ----- APP.POST -----
 app.post("/urls", (req, res) => { // creating/saving a new URL and storing it to urlDatabase object
   // console.log("req.body: ", req.body);
