@@ -12,29 +12,24 @@
   <title>Login - TinyApp Example</title>
 </head>
 
-<body>
+<body class="d-flex flex-column" style="min-height: 100vh;">
 
   <%- include('partials/_header') %>
 
-    <div class="card text-center">
-      <div class="card-header"></div>
+    <div class="card text-center" style="width: 500px; margin: auto;">
       <div class="card-body">
-        <h5 class="card-title">TinyApp Login</h5>
-        <form class="form-inline" action="/login" method="POST">
-          <div class="col-md-4 col-md-offset-4">
-            <div class="mx-auto">
-              <label class="form-label">Email Address</label>
-              <input class="form-control" type="email" name="email" placeholder="Email Address">
-            </div>
-            <div class="mx-auto">
-              <label class="form-label">Password</label>
-              <input class="form-control" type="password" name="password" placeholder="Password">
-            </div>
-            <button type="submit" class="btn btn-primary">Login</button>
+        <h3 class="card-title">TinyApp Login</h3>
+        <form action="/login" method="POST">
+          <div class="mx-auto d-flex flex-column">
+            <label class="form-label text-left pt-3">Email Address</label>
+            <input class="form-control mt-1" type="email" name="email" placeholder="Email Address">
           </div>
+          <div class="mx-auto d-flex flex-column">
+            <label class="form-label text-left pt-3">Password</label>
+            <input class="form-control mt-1" type="password" name="password" placeholder="Password">
+          </div>
+          <button type="submit" class="btn btn-secondary mt-3 w-100">Login</button>
         </form>
-      </div>
-      <div class="card-footer text-muted">
       </div>
     </div>
 
