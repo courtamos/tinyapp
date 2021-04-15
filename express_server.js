@@ -50,6 +50,18 @@ const userEmailLookup = function(database, email) { // helper function to lookup
   return null;
 };
 
+const urlsForUser = function(database, id) { // helper function to return the URLs for a specified user
+  let userURLS = {};
+  
+  for (let key in database) {
+    if (database[key].userID === id) {
+      userURLS[key] = database[key];
+    }
+  }
+
+  return userURLS;
+};
+
 // ----- APP.GET -----
 app.get("/", (req, res) => {  // homepage route
   res.send("Hello!");
@@ -62,13 +74,15 @@ app.get("/urls.json", (req, res) => {
 
 
 app.get("/urls", (req, res) => { // passing the URL data to template (urls_index.ejs)
-  const templateVars = { urls: urlDatabase, user: users[req.cookies.user_id] };
   const user = users[req.cookies.user_id];
 
   if (!user) {
-    res.redirect('/login');
+    res.send('To view this page you must be logged in. Please login or register!');
     res.exit();
   }
+
+  const userURLS = urlsForUser(urlDatabase, user.id);
+  const templateVars = { urls: userURLS, user: user };
 
   res.render("urls_index", templateVars);
 });
@@ -123,7 +137,11 @@ app.get("/login", (req, res) => { // rendering the login template in browser
 // ----- APP.POST -----
 app.post("/urls", (req, res) => { // creating/saving a new URL and storing it to urlDatabase object
   const shortURL = generateRandomString();
-  urlDatabase[shortURL] = req.body["longURL"];
+  const userID = users[req.cookies.user_id].id;
+  console.log('user: ', userID);
+
+  urlDatabase[shortURL] = { longURL: req.body["longURL"], userID: userID };
+  console.log('urldbs', urlDatabase[shortURL]);
 
   res.redirect(`/urls/${shortURL}`);
 });
