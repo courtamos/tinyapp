@@ -2,18 +2,21 @@ const express = require("express");
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 const bcrypt = require('bcrypt');
+const cookieSession = require('cookie-session');
 
 
 const app = express();
 const PORT = 8080;
 const saltRounds = 10;
 
-app.use(morgan('dev'));
-app.use(cookieParser());
-
 app.set("view engine", "ejs");  // use EJS as the templating engine
+app.use(morgan('dev'));
 app.use(express.urlencoded({extended: true})); // used instead of body-parser(deprecated)
 
+app.use(cookieSession({
+  name: 'session',
+  keys: ["key1", "key2"]
+}));
 
 const urlDatabase = { // 'database' to store key:value pairs of URLs
   "b2xVn2": {longURL: "http://www.lighthouselabs.ca", userID: "userRandomID" },
@@ -24,12 +27,14 @@ const users = { // 'database' to store key:value pairs for users
   "userRandomID": {
     id: "userRandomID",
     email: "user@example.com",
-    password: "1234"
+    password: "$2b$10$7JHZ2AZr.s48bX3UYCIJYOOc1ZxcLTJm0wyG7Ww//BFgF5v8Exzu2"
+    // password: "1234"
   },
   "user2RandomID": {
     id: "user2RandomID",
     email: "user2@example.com",
-    password: "dishwasher-funk"
+    password: "$2b$10$7ozzzE0f42EPABOvQEPJWuiuntejoAQaiWS4YwyilDTGEpnmiWIe2"
+    // password: "dishwasher-funk"
   }
 };
 
@@ -61,17 +66,12 @@ const urlsForUser = function(database, id) { // helper function to return the UR
 
 // ----- APP.GET -----
 app.get("/", (req, res) => {  // homepage route
-  res.send("Hello!");
-});
-
-
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
+  res.redirect("/login");
 });
 
 
 app.get("/urls", (req, res) => { // passing the URL data to template (urls_index.ejs)
-  const user = users[req.cookies.user_id];
+  const user = users[req.session.user_id];
 
   if (!user) {
     return res.send('To view this page you must be logged in. Please login or register!');
@@ -85,8 +85,8 @@ app.get("/urls", (req, res) => { // passing the URL data to template (urls_index
 
 
 app.get("/urls/new", (req, res) => { // rendering the template in the browers (urls_new.ejs)
-  const templateVars = { user: users[req.cookies.user_id] };
-  const user = users[req.cookies.user_id];
+  const templateVars = { user: users[req.session.user_id] };
+  const user = users[req.session.user_id];
 
   if (!user) {
     return res.redirect('/login');
@@ -97,8 +97,8 @@ app.get("/urls/new", (req, res) => { // rendering the template in the browers (u
 
 
 app.get("/urls/:shortURL", (req, res) => { // display a single URL and its shortURL
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL, user: users[req.cookies.user_id] };
-  const user = users[req.cookies.user_id];
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL, user: users[req.session.user_id] };
+  const user = users[req.session.user_id];
 
   if (!user) {
     return res.redirect('/login');
@@ -120,7 +120,7 @@ app.get("/u/:shortURL", (req, res) => { // redirecting shortURL to correct longU
 
 
 app.get("/register", (req, res) => { // rending the register template in brower
-  const templateVars = { user: users[req.cookies.user_id] };
+  const templateVars = { user: users[req.session.user_id] };
 
   if (templateVars.user) {
     res.redirect("/urls");
@@ -131,7 +131,7 @@ app.get("/register", (req, res) => { // rending the register template in brower
 
 
 app.get("/login", (req, res) => { // rendering the login template in browser
-  const templateVars = { user: users[req.cookies.user_id] };
+  const templateVars = { user: users[req.session.user_id] };
 
   if (templateVars.user) {
     res.redirect("/urls");
@@ -143,11 +143,11 @@ app.get("/login", (req, res) => { // rendering the login template in browser
 
 // ----- APP.POST -----
 app.post("/urls", (req, res) => { // creating/saving a new URL and storing it to urlDatabase object
-  if (!req.cookies.user_id) {
+  if (!req.session.user_id) {
     return res.status(401).send('No userID provided');
   }
 
-  const user = users[req.cookies.user_id];
+  const user = users[req.session.user_id];
   if (!user) {
     return res.status(401).send('User not found');
   }
@@ -166,7 +166,7 @@ app.post("/urls", (req, res) => { // creating/saving a new URL and storing it to
 
 app.post("/urls/:shortURL/delete", (req, res) => { // deleting/removing a URL
   const shortURL = req.params.shortURL;
-  const userID = users[req.cookies.user_id].id;
+  const userID = users[req.session.user_id].id;
 
   if (!userID) {
     return res.status(401).send('No userID provided');
@@ -185,7 +185,7 @@ app.post("/urls/:shortURL/delete", (req, res) => { // deleting/removing a URL
 
 app.post("/urls/:shortURL", (req, res) => { // edit/update a shortURL's longURL
   const shortURL = req.params.shortURL;
-  const userID = users[req.cookies.user_id].id;
+  const userID = users[req.session.user_id].id;
 
   if (!userID) {
     return res.status(401).send('No userID provided');
@@ -216,14 +216,17 @@ app.post("/login", (req, res) => { // login route to set cookie named user_id
       return res.status(403).send('Password is incorrect. Try again!');
     }
 
-    res.cookie('user_id', user.id);
+    console.log("password L: ", req.body.password);
+    console.log("hashed L: ", user.password);
+
+    req.session.user_id = user.id;
     res.redirect('/urls');
   });
 });
 
 
 app.post("/logout", (req, res) => { // logout route that clears cookie
-  res.clearCookie('user_id');
+  req.session = null;
 
   res.redirect('/login');
 });
@@ -251,8 +254,11 @@ app.post("/register", (req, res) => { // register route
       password: hash
     };
 
+    console.log("password R: ", password);
+    console.log("hashed R: ", hash);
+
     users[id] = newUser;
-    res.cookie('user_id', id);
+    req.session.user_id = newUser.id;
     res.redirect("/urls");
   });
 });
