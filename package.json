@@ -1,7 +1,7 @@
 {
   "name": "tinyapp",
   "version": "1.0.0",
-  "description": "",
+  "description": "full stack web app made for educational purposed",
   "main": "express_server.js",
   "scripts": {
     "start": "./node_modules/.bin/nodemon -L express_server.js",
@@ -12,7 +12,7 @@
     "url": "git+https://github.com/courtamos/tinyapp.git"
   },
   "keywords": [],
-  "author": "",
+  "author": "@courtamos",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/courtamos/tinyapp/issues"
