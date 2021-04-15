@@ -138,18 +138,27 @@ app.get("/login", (req, res) => { // rendering the login template in browser
 app.post("/urls", (req, res) => { // creating/saving a new URL and storing it to urlDatabase object
   const shortURL = generateRandomString();
   const userID = users[req.cookies.user_id].id;
-  console.log('user: ', userID);
 
   urlDatabase[shortURL] = { longURL: req.body["longURL"], userID: userID };
-  console.log('urldbs', urlDatabase[shortURL]);
 
   res.redirect(`/urls/${shortURL}`);
 });
 
 
 app.post("/urls/:shortURL/delete", (req, res) => { // deleting/removing a URL
-  const shortURLDelete = req.params.shortURL;
-  delete urlDatabase[shortURLDelete];
+  const shortURL = req.params.shortURL;
+  const userID = users[req.cookies.user_id].id;
+
+  if (!userID) {
+    res.status(401).send('No userID provided');
+  }
+
+  const urlEntry = urlDatabase[shortURL];
+  if (urlEntry.userID !== userID) {
+    res.status(401).send('You do not have access to delete this shortURL');
+  }
+
+  delete urlDatabase[shortURL];
 
   res.redirect("/urls");
 });
@@ -157,7 +166,18 @@ app.post("/urls/:shortURL/delete", (req, res) => { // deleting/removing a URL
 
 app.post("/urls/:shortURL", (req, res) => { // edit/update a shortURL's longURL
   const shortURL = req.params.shortURL;
-  urlDatabase[shortURL] = req.body["longURL"];
+  const userID = users[req.cookies.user_id].id;
+
+  if (!userID) {
+    res.status(401).send('No userID provided');
+  }
+
+  const urlEntry = urlDatabase[shortURL];
+  if (urlEntry.userID !== userID) {
+    res.status(401).send('You do not have access to edit this shortURL');
+  }
+
+  urlDatabase[shortURL].longURL = req.body["longURL"];
 
   res.redirect("/urls");
 });
