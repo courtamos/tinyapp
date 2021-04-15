@@ -1,18 +1,15 @@
-// ----- EXPRESS SETUP -----
 const express = require("express");
+const cookieParser = require('cookie-parser');
+const morgan = require('morgan');
+const bcrypt = require('bcrypt');
+
+
 const app = express();
 const PORT = 8080;
+const saltRounds = 10;
 
-
-// ----- MORGAN MIDDLEWARE SETUP -----
-const morgan = require('morgan'); // morgan middleware (gives transparency to incoming & outcoming infomation to the server)
 app.use(morgan('dev'));
-
-
-// ----- COOKIE-PARSER SETUP -----
-const cookieParser = require('cookie-parser');
 app.use(cookieParser());
-
 
 app.set("view engine", "ejs");  // use EJS as the templating engine
 app.use(express.urlencoded({extended: true})); // used instead of body-parser(deprecated)
@@ -27,7 +24,7 @@ const users = { // 'database' to store key:value pairs for users
   "userRandomID": {
     id: "userRandomID",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur"
+    password: "1234"
   },
   "user2RandomID": {
     id: "user2RandomID",
@@ -77,8 +74,7 @@ app.get("/urls", (req, res) => { // passing the URL data to template (urls_index
   const user = users[req.cookies.user_id];
 
   if (!user) {
-    res.send('To view this page you must be logged in. Please login or register!');
-    res.exit();
+    return res.send('To view this page you must be logged in. Please login or register!');
   }
 
   const userURLS = urlsForUser(urlDatabase, user.id);
@@ -93,8 +89,7 @@ app.get("/urls/new", (req, res) => { // rendering the template in the browers (u
   const user = users[req.cookies.user_id];
 
   if (!user) {
-    res.redirect('/login');
-    res.exit();
+    return res.redirect('/login');
   }
   
   res.render("urls_new", templateVars);
@@ -106,8 +101,12 @@ app.get("/urls/:shortURL", (req, res) => { // display a single URL and its short
   const user = users[req.cookies.user_id];
 
   if (!user) {
-    res.redirect('/login');
-    res.exit();
+    return res.redirect('/login');
+  }
+
+  const urlEntry = urlDatabase[req.params.shortURL];
+  if (urlEntry.userID !== user.id) {
+    return res.status(401).send('You do not have access to edit this shortURL');
   }
   
   res.render("urls_show", templateVars);
@@ -123,6 +122,10 @@ app.get("/u/:shortURL", (req, res) => { // redirecting shortURL to correct longU
 app.get("/register", (req, res) => { // rending the register template in brower
   const templateVars = { user: users[req.cookies.user_id] };
 
+  if (templateVars.user) {
+    res.redirect("/urls");
+  }
+
   res.render("urls_register", templateVars);
 });
 
@@ -130,16 +133,32 @@ app.get("/register", (req, res) => { // rending the register template in brower
 app.get("/login", (req, res) => { // rendering the login template in browser
   const templateVars = { user: users[req.cookies.user_id] };
 
+  if (templateVars.user) {
+    res.redirect("/urls");
+  }
+
   res.render("urls_login", templateVars);
 });
 
 
 // ----- APP.POST -----
 app.post("/urls", (req, res) => { // creating/saving a new URL and storing it to urlDatabase object
-  const shortURL = generateRandomString();
-  const userID = users[req.cookies.user_id].id;
+  if (!req.cookies.user_id) {
+    return res.status(401).send('No userID provided');
+  }
 
-  urlDatabase[shortURL] = { longURL: req.body["longURL"], userID: userID };
+  const user = users[req.cookies.user_id];
+  if (!user) {
+    return res.status(401).send('User not found');
+  }
+
+  const isValidURL = req.body["longURL"].startsWith('http://') || req.body["longURL"].startsWith('https://');
+  if (!isValidURL) {
+    return res.status(400).send('Invalid URL entry, must start with http:// or https://');
+  }
+
+  const shortURL = generateRandomString();
+  urlDatabase[shortURL] = { longURL: req.body["longURL"], userID: user.id };
 
   res.redirect(`/urls/${shortURL}`);
 });
@@ -150,12 +169,12 @@ app.post("/urls/:shortURL/delete", (req, res) => { // deleting/removing a URL
   const userID = users[req.cookies.user_id].id;
 
   if (!userID) {
-    res.status(401).send('No userID provided');
+    return res.status(401).send('No userID provided');
   }
 
   const urlEntry = urlDatabase[shortURL];
   if (urlEntry.userID !== userID) {
-    res.status(401).send('You do not have access to delete this shortURL');
+    return res.status(401).send('You do not have access to delete this shortURL');
   }
 
   delete urlDatabase[shortURL];
@@ -169,12 +188,12 @@ app.post("/urls/:shortURL", (req, res) => { // edit/update a shortURL's longURL
   const userID = users[req.cookies.user_id].id;
 
   if (!userID) {
-    res.status(401).send('No userID provided');
+    return res.status(401).send('No userID provided');
   }
 
   const urlEntry = urlDatabase[shortURL];
   if (urlEntry.userID !== userID) {
-    res.status(401).send('You do not have access to edit this shortURL');
+    return res.status(401).send('You do not have access to edit this shortURL');
   }
 
   urlDatabase[shortURL].longURL = req.body["longURL"];
@@ -187,24 +206,26 @@ app.post("/login", (req, res) => { // login route to set cookie named user_id
   const user = userEmailLookup(users, req.body.email);
 
   if (!user) {
-    res.status(403).send('Email not found. Please register!');
-    res.end();
+    return res.status(403).send('Email not found. Please register!');
   }
 
-  if (user.password !== req.body.password) {
-    res.status(403).send('Password is incorrect. Try again!');
-    res.end();
-  }
+  bcrypt.compare(req.body.password, user.password, function(err, result) {
+    if (err) return res.status(400).send('Error logging in');
 
-  res.cookie('user_id', user.id);
-  res.redirect('/urls');
+    if (!result) {
+      return res.status(403).send('Password is incorrect. Try again!');
+    }
+
+    res.cookie('user_id', user.id);
+    res.redirect('/urls');
+  });
 });
 
 
 app.post("/logout", (req, res) => { // logout route that clears cookie
   res.clearCookie('user_id');
 
-  res.redirect('/urls');
+  res.redirect('/login');
 });
 
 
@@ -212,29 +233,28 @@ app.post("/register", (req, res) => { // register route
   const id = generateRandomString();
   const email = req.body.email;
   const password = req.body.password;
-
-  const newUser = {
-    id,
-    email,
-    password
-  };
-
   if (!email || !password) {
-    res.status(400).send('Email and Password fields can NOT be empty');
-    res.end();
+    return res.status(400).send('Email and Password fields can NOT be empty');
   }
 
   const user = userEmailLookup(users, email);
-
   if (user) {
-    res.status(400).send('Email is already registered');
-    res.end();
+    return res.status(400).send('Email is already registered');
   }
 
-  users[id] = newUser;
+  bcrypt.hash(password, saltRounds, function(err, hash) {
+    if (err) return res.status(400).send('Error saving user');
+    
+    const newUser = {
+      id,
+      email,
+      password: hash
+    };
 
-  res.cookie('user_id', id);
-  res.redirect("/urls");
+    users[id] = newUser;
+    res.cookie('user_id', id);
+    res.redirect("/urls");
+  });
 });
 
 
