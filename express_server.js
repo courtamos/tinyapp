@@ -18,12 +18,12 @@ app.use(cookieSession({
   keys: ["key1", "key2"]
 }));
 
-const urlDatabase = { // 'database' to store key:value pairs of URLs
+const urlDatabase = {
   "b2xVn2": {longURL: "http://www.lighthouselabs.ca", userID: "userRandomID" },
   "9sm5xK": {longURL: "http://www.google.com", userID: "user2RandomID" }
 };
 
-const users = { // 'database' to store key:value pairs for users
+const users = {
   "userRandomID": {
     id: "userRandomID",
     email: "user@example.com",
@@ -40,12 +40,13 @@ const users = { // 'database' to store key:value pairs for users
 
 
 // ----- APP.GET -----
-app.get("/", (req, res) => {  // homepage route
+// homepage
+app.get("/", (req, res) => {
   res.redirect("/login");
 });
 
-
-app.get("/urls", (req, res) => { // passing the URL data to template (urls_index.ejs)
+// rendering the url template in browser
+app.get("/urls", (req, res) => {
   const user = users[req.session.user_id];
 
   if (!user) {
@@ -58,8 +59,8 @@ app.get("/urls", (req, res) => { // passing the URL data to template (urls_index
   res.render("urls_index", templateVars);
 });
 
-
-app.get("/urls/new", (req, res) => { // rendering the template in the browers (urls_new.ejs)
+// rendering the newURL template in browser
+app.get("/urls/new", (req, res) => {
   const templateVars = { user: users[req.session.user_id] };
   const user = users[req.session.user_id];
 
@@ -70,8 +71,8 @@ app.get("/urls/new", (req, res) => { // rendering the template in the browers (u
   res.render("urls_new", templateVars);
 });
 
-
-app.get("/urls/:shortURL", (req, res) => { // display a single URL and its shortURL
+// display a single URL
+app.get("/urls/:shortURL", (req, res) => {
   const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL, user: users[req.session.user_id] };
   const user = users[req.session.user_id];
 
@@ -87,14 +88,14 @@ app.get("/urls/:shortURL", (req, res) => { // display a single URL and its short
   res.render("urls_show", templateVars);
 });
 
-
-app.get("/u/:shortURL", (req, res) => { // redirecting shortURL to correct longURL
+// redirecting shortURL to correct longURL
+app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
 });
 
-
-app.get("/register", (req, res) => { // rending the register template in brower
+// rending the register template in brower
+app.get("/register", (req, res) => {
   const templateVars = { user: users[req.session.user_id] };
 
   if (templateVars.user) {
@@ -104,8 +105,8 @@ app.get("/register", (req, res) => { // rending the register template in brower
   res.render("urls_register", templateVars);
 });
 
-
-app.get("/login", (req, res) => { // rendering the login template in browser
+// rendering the login template in browser
+app.get("/login", (req, res) => {
   const templateVars = { user: users[req.session.user_id] };
 
   if (templateVars.user) {
@@ -115,9 +116,9 @@ app.get("/login", (req, res) => { // rendering the login template in browser
   res.render("urls_login", templateVars);
 });
 
-
 // ----- APP.POST -----
-app.post("/urls", (req, res) => { // creating/saving a new URL and storing it to urlDatabase object
+// creating/saving a new URL route
+app.post("/urls", (req, res) => {
   if (!req.session.user_id) {
     return res.status(401).send('No userID provided');
   }
@@ -138,8 +139,8 @@ app.post("/urls", (req, res) => { // creating/saving a new URL and storing it to
   res.redirect(`/urls/${shortURL}`);
 });
 
-
-app.post("/urls/:shortURL/delete", (req, res) => { // deleting/removing a URL
+// delete shortURL route
+app.post("/urls/:shortURL/delete", (req, res) => {
   const shortURL = req.params.shortURL;
   const userID = users[req.session.user_id].id;
 
@@ -157,8 +158,8 @@ app.post("/urls/:shortURL/delete", (req, res) => { // deleting/removing a URL
   res.redirect("/urls");
 });
 
-
-app.post("/urls/:shortURL", (req, res) => { // edit/update a shortURL's longURL
+// edit a shortURL route
+app.post("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   const userID = users[req.session.user_id].id;
 
@@ -176,8 +177,8 @@ app.post("/urls/:shortURL", (req, res) => { // edit/update a shortURL's longURL
   res.redirect("/urls");
 });
 
-
-app.post("/login", (req, res) => { // login route to set cookie named user_id
+// login route
+app.post("/login", (req, res) => {
   const user = getUserByEmail(users, req.body.email);
 
   if (!user) {
@@ -196,15 +197,15 @@ app.post("/login", (req, res) => { // login route to set cookie named user_id
   });
 });
 
-
-app.post("/logout", (req, res) => { // logout route that clears cookie
+// logout route
+app.post("/logout", (req, res) => {
   req.session = null;
 
   res.redirect('/login');
 });
 
-
-app.post("/register", (req, res) => { // register route
+// register route
+app.post("/register", (req, res) => {
   const id = generateRandomString();
   const email = req.body.email;
   const password = req.body.password;
@@ -231,7 +232,6 @@ app.post("/register", (req, res) => { // register route
     res.redirect("/urls");
   });
 });
-
 
 // ----- APP.LISTEN -----
 app.listen(PORT, () => {
