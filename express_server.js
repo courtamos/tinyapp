@@ -1,8 +1,8 @@
 const express = require("express");
-const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 const bcrypt = require('bcrypt');
 const cookieSession = require('cookie-session');
+const { getUserByEmail, generateRandomString, urlsForUser } = require('./helpers');
 
 
 const app = express();
@@ -38,31 +38,6 @@ const users = { // 'database' to store key:value pairs for users
   }
 };
 
-
-const generateRandomString = function() {  // generate random alphanumeric characters (aka shortURLs)
-  return Math.random().toString(20).substr(2, 6);
-};
-
-const userEmailLookup = function(database, email) { // helper function to lookup user by email and return the entire user object if found or null if not
-  for (let key in database) {
-    if (database[key].email === email) {
-      return database[key];
-    }
-  }
-  return null;
-};
-
-const urlsForUser = function(database, id) { // helper function to return the URLs for a specified user
-  let userURLS = {};
-  
-  for (let key in database) {
-    if (database[key].userID === id) {
-      userURLS[key] = database[key];
-    }
-  }
-
-  return userURLS;
-};
 
 // ----- APP.GET -----
 app.get("/", (req, res) => {  // homepage route
@@ -203,7 +178,7 @@ app.post("/urls/:shortURL", (req, res) => { // edit/update a shortURL's longURL
 
 
 app.post("/login", (req, res) => { // login route to set cookie named user_id
-  const user = userEmailLookup(users, req.body.email);
+  const user = getUserByEmail(users, req.body.email);
 
   if (!user) {
     return res.status(403).send('Email not found. Please register!');
@@ -215,9 +190,6 @@ app.post("/login", (req, res) => { // login route to set cookie named user_id
     if (!result) {
       return res.status(403).send('Password is incorrect. Try again!');
     }
-
-    console.log("password L: ", req.body.password);
-    console.log("hashed L: ", user.password);
 
     req.session.user_id = user.id;
     res.redirect('/urls');
@@ -240,7 +212,7 @@ app.post("/register", (req, res) => { // register route
     return res.status(400).send('Email and Password fields can NOT be empty');
   }
 
-  const user = userEmailLookup(users, email);
+  const user = getUserByEmail(users, email);
   if (user) {
     return res.status(400).send('Email is already registered');
   }
@@ -253,9 +225,6 @@ app.post("/register", (req, res) => { // register route
       email,
       password: hash
     };
-
-    console.log("password R: ", password);
-    console.log("hashed R: ", hash);
 
     users[id] = newUser;
     req.session.user_id = newUser.id;
